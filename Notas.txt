@@ -1,0 +1,11 @@
+
+Ir a una carpeta:
+getwd () Puedes encontrar 
+setwd ()
+Tipos de carpetas convenientes: 
+
+- datos en bruto 			
+- datos procesados 
+- datos scripts 
+- carpeta de reportes 
+

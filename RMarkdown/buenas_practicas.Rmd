@@ -1,0 +1,134 @@
+---
+title: "Buenas prácticas"
+author: "Daniel Payan"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## __Conceptos generales__ 
+ + 1.- Primer concepto 
+ + 2.- Segundo concepto
+  + 1.1.- Segundo segundo concepto 
+
+### _Cheatsheet_ 
+
+Para escribir en cursivas es necesario aplicar un guión bajo de cada lado de la _palabra_
+
+Y para el caso de las negritas aplicamos dos guiones sobre la __palabra__
+
+
++ [Google](https://www.bing.com/search?pglt=513&q=google+chrome&cvid=f89799c6160f4986b43a2658cdde8899&gs_lcrp=EgZjaHJvbWUqBAgCEC4yBggAEEUYOTIECAEQADIECAIQLjIGCAMQRRg7MgQIBBAuMgQIBRAuMgQIBhAuMgQIBxAuMgYICBBFGEEyBwgJEEUY_FXSAQg0MzI2ajBqMagCALACAA&FORM=ANNAB1&PC=DCTS)
+
++ [LinkedIn](https://www.linkedin.com/notifications/?filter=all)
+
+a <- 384975
+b <- a / 10
+
+var <- "Daniel"
+
+var
+
+rm(var)
+
+rm(rm)
+
+var
+
+a
+b
+
+# Vectores
+
+Conjunto de valores en una sola dimensión 
+Las comillas se leen como texto, y no se puede combinar calores númericos y caracteres en un vector
+
+```{r}
+vector <- c(1,2,3,4,5)
+nombres <- c("Larissa", "Celina", "Hugo", "Mariana")
+```
+
+## Todo lo que esté antes de la flecha, es un objeto 
+
+### Matrices
+
+Un tipo de tabla en la que todos sus valores son numéricos.El formato de matriz a veces es necesaria para ciertos cálculos y tipos de gráficos.
+
+```{r}
+
+## Creando una matriz desde cero 
+
+matriz_ejemplo <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9),  
+                         nrow = 3, 
+                         ncol = 3)
+matriz_ejemplo
+```
+
+
+```{r}
+mat <- matrix(c(1, 2, 3, 4, 5, 6, 7, 8, 9), nrow = 3, ncol = 3)
+mat
+
+# Nombre de filas 
+
+rownames(mat) <- c("a", "b", "c")
+
+# Nombre de columnas 
+
+colnames(mat) <- c("x", "y", "z")
+
+mat
+
+mat 
+
+```
+
+### Data Frames 
+
+Este es el nombre que tienen las tablas en RStudio. La definición de un data frame es una agrupación de vectores que tienen valores de diferentes tipos. Por ejemplo: numeric and character 
+
+Una matriz se puede volver un data frame pero cuando lo haces al revés, usualmente se pierden los datos o puede ocurrir un error. 
+
+```{r}
+## Haciendo una tabla desde cero con RStudio
+
+Nombress <- c("Hugo", "Celina", "Mariana", "Larissa", "Daniel")
+Edad <- c(40, 28, 23, 28, 27)
+
+Edad_promedio <- data.frame(Nombress, Edad)  
+
+View(Edad_promedio)
+
+Edad_promedio2 <- 
+
+
+```
+
+
+
+
