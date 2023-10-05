@@ -1,0 +1,64 @@
+---
+title: "Funciones, For Loops, If else"
+output: html_notebook
+---
+
+# Introducción 
+
+Para la clase de hoy vamos a ver comandos en RStudio que pueden ayudar a automatizar nuestro codigo, condensando pasos repetitivos en un solo comando (Pero varias lineas de codigo)
+
+## Funciones 
+
+Set de argumentos que que se organizan juntos para realizar una tarea específica 
+
+En realidad todos los comandos que hemos usado son funciones que ya vienen incluidos en R, pero podemos crear los nuestros.
+
+### Componentes de una funcion 
+
+* __Nombre de la funcion:__ Nosotros se lo damos 
+* __Argumentos:__ Los elementos necesarios para llevar a cabo la función. _Input_
+* __Cuerpo de la función:__ Define lo que va a hacer la funcion 
+* __Respuesta:__ El valor o resultado de la tarea asignada a una funcion. _Output_
+
+```{r}
+nombre_funcion <- function(argumentos) # Lo que necesitas para calcular la funcion 
+  respuesta <- haz_algo (argumentos) # Calculos o modificaciones que haras con los argumentos
+return(respuesta) # Lo que se va a "imprimir"
+# Todo lo que esta en entre corchetes es la funcion
+
+cal_vol_foliar <- function(long, ancho, altura) {
+  area <- long * ancho
+  volumen <- area * altura
+  return(volumen)
+}
+
+# Ahora usemos la funcion 
+
+cal_vol_foliar(long = 1, ancho = 2.5, altura = 2)
+
+# Guardar objeto 
+
+arbusto <- cal_vol_foliar(2.5, 1, 2)
+
+# Ahora usemos desde un data frame 
+
+arbustos <- data.frame(arbustos=c("arbusto 1", "arbusto 2"),
+                       Long=c(340,356),
+                       ancho=c(45,32),
+                       altura=c(890,870))
+
+# Usemos ña funcion 
+
+cal_vol_foliar(arbustos$Long[1], #En estos brackets no hay coma porque es una única dimension
+               arbustos$ancho[1],
+               arbustos$altura[1])
+
+cal_vol_foliar(arbustos$Long[2], #En estos brackets no hay coma porque es una única dimension
+               arbustos$ancho[2],
+               arbustos$altura[2])
+
+
+
+
+```
+
