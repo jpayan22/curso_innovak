@@ -1,6 +1,10 @@
 ---
 title: "Funciones, For Loops, If else"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
 ---
 
 # Introducción 
@@ -57,8 +61,217 @@ cal_vol_foliar(arbustos$Long[2], #En estos brackets no hay coma porque es una ú
                arbustos$ancho[2],
                arbustos$altura[2])
 
-
+library(tinytex)
 
 
 ```
+
+
+### Ejercicio 
+
+Crear una funcion que calcule el area foliar de una especie de arboles unica en el mundo que tiene hojas triangulares: $A = bh/2$
+
+```{r}
+area_foliar <- function(base, altura) {
+  area <- base * altura / 2
+  return(area) 
+}
+
+area_foliar(base = 45, altura = 67)
+
+```
+#### Combinando funciones 
+
+Se ha descubierto que en esta especie de arboles se puede estimar los dias de crecimiento de la hoja usando el area de las mismas con la siguiente formula: Cr = ^1.73
+
+```{r}
+# Funcion para estimar crecimiento de las hojas 
+
+est_crecimiento <- function(area) {
+  crecimiento <- area ^1.73
+  return(crecimiento)
+}
+
+## Nested functiones o funciones combinadas 
+
+crecimiento_hoja <- est_crecimiento(area_foliar(3,5))
+
+```
+
+
+## For Loops 
+
+Los _For Loops_ 
+
+### Estrcutura basica 
+
+```{r}
+
+for(numero_de_cosa in lista_de_cosas) {
+  action(cosa)
+}
+
+```
+
+# Ejemplo simple usando un vector
+
+```{r}
+longits <- c(3,6.7,23,9.2) # vector
+
+for (a in longits) { # El nombre es arbitrario, se puede unicamene usar una letra
+  print(2.65*a ^0.9) # El nombre debe de coincidir con la accion que se esta comandando
+} # Se pone print para obtener el resultado y poder verlo sin guardarlo 
+
+for (longits in longits) {
+  masa <- 2.65 * longits ^0.9
+  masa_lb <- masa * 2.2
+  print(masa_lb)
+}
+```
+### Ejercicio 
+
+```{r}
+# Vamos a modidificar este for loop para que imprima multiplos de 3
+
+for (i in 1:5){
+  print(i*3)
+}
+
+
+## Ahora hacer un for loop para cambiar estos valores de cm a in cm/2.54
+
+centim <- c(135,45,23,16730,54,29) 
+
+for (i in centim) {
+  pulg <- i / 2.54
+  print(pulg)
+}
+
+```
+## Como se aplica un for loop a dataframe 
+
+Para poder seleccionar una de las columnas o filas se elige un index o posicion para se vaya repitiendo 
+
+```{r}
+medidas_clase <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Class-data.csv")
+
+# Modificar altura de cm a pies 
+## Primer Loop
+
+for (i in 1: nrow(medidas_clase)) {
+  altura_ft <- medidas_clase$Height.cm[i]/30.48
+  print(altura_ft)
+}
+
+# Nuevo vector vacio para poder llenarlo con los datos del loop usado anteriormente 
+
+alt_pies <- vector(mode = "numeric",
+                   length = nrow(medidas_clase))
+
+
+## Loop para guardar los datos en un vector 
+
+for (i in 1: nrow(medidas_clase)) {
+  altura_ft <- medidas_clase$Height.cm[i]/30.48
+  alt_pies[i] <- altura_ft # cambiamos print para que lo guarde en el vector
+}
+
+alt_pies
+
+```
+
+#### Ejercicio 
+
+Repetir el proceso de guardar los datos de un for loop distinto dentro de un vector modificando el for loop de cm a pulgadas
+
+```{r}
+centim <- c(135,45,23,16730,54,29) 
+
+for (i in centim) {
+  pulg <- i / 2.54
+  print(pulg)
+} 
+
+length(centim) 
+
+long_cm <- vector(mode = "numeric",
+                   length = length(centim))
+
+for (i in 1: length(centim)) {
+  pulg <- i / 2.54
+  long_cm [i] <- pulg # cambiamos print para que lo guarde en el vector
+}
+
+
+```
+
+## Integrar datos de un for loop a un dataframe 
+
+```{r}
+# Unir el vector 
+
+medidas_clase <- cbind(medidas_clase, alt_pies) # La c es de columna 
+
+## Directamente en la tabla 
+
+for (i in 1: nrow(medidas_clase)){
+  alt_pies <- medidas_clase$Height.cm[i]/30.48
+  medidas_clase$alt_pies[i] <- alt_pies # cambiamos para que lo guarde directamente el en data frame ZONA DE GUARDADO
+}
+
+## Hacer calculos con las columnas 
+
+Acidos <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Acidos_ex.csv")
+
+sapply(Acidos,mode) # Revisar el tipo de caracter de cada columna en un dataframe 
+
+for(i in 2: ncol(Acidos)) {
+  Promedios <- mean(Acidos[,i], na.rm = TRUE)
+  print(Promedios)
+}
+
+
+mean(Acidos[,2], na.rm = TRUE) # Se saco el promedio pero se selecciono una funcion para evitar las secciones con NA o vacios 
+
+# Sin embargo este no se guardo, se haria lo siguiente 
+
+ac_prom <- c()
+
+for (i in 2: ncol(Acidos)) {
+  Promedios <- mean(Acidos[,i], na.rm = TRUE)
+  ac_prom[i] <- c(Promedios)
+}
+
+Acidos <- rbind(Acidos, ac_prom) # row bind
+
+```
+
+### Ejercicios 
+
+# 1. agregar al archivo de medidas_clase otra columna en el que la circunferencia de la cabeza este en pulgadas cm/2.54
+
+# 2. En el archivo de acidos ya agregamos una fila con los promedios ahora traten de agregar una con la desviacion estandar 
+
+```{r}
+
+# Ejercicio 1
+
+for (i in 1: nrow(medidas_clase)){
+  circunferencia <- medidas_clase$CircumferenceHead.com[i]/2.54
+  medidas_clase$circunferencia[i] <- circunferencia
+}
+
+# Ejercicio 2
+
+desv_est <- c()
+
+for (i in 2: ncol(Acidos)) {
+  dev <- sd (Acidos[,i], na.rm = TRUE)
+  desv_est[i] <- c(dev)
+}
+
+  desv_est <- rbind(Acidos,desv_est)
+```
+
+
 
