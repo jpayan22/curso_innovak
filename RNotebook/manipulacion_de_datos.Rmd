@@ -1,0 +1,153 @@
+---
+title: "Manipulacion de datos"
+output: html_notebook
+---
+
+# 
+
+
+```{r}
+
+# Library
+
+library(dplyr) # Manipulacion de datos, funciones, modificar columnas, filtrar, reordenar, calculos, etc
+library(tidyr) # modificar las funciones de datos 
+library(readr) # leer y escrivir csvs
+install.packages("udunits2") # conversion de unidades 
+
+library(udunits2)
+
+# Data
+
+acidos <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Acidos_ex.csv") 
+
+medidas_clase <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Class-data.csv")
+
+metadata <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Exud_metadata.csv")
+
+plantas <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Tabla_plantas.csv")
+```
+
+```{r}
+str(medidas_clase) # Estructura interna, tipo de cada variable y nombres de las variables 
+
+dim(medidas_clase) # Filas y columnas 
+
+nrow(medidas_clase) ; ncol(medidas_clase) # para separar comandos cortos 
+
+head(medidas_clase) # Imprime las primeras 6 filas de la tabla
+
+```
+
+## Reordenar datos 
+
+```{r}
+ # Reordenar columnas 
+
+medidas_clase <- medidas_clase[,c(1,9,4,2,3,5,6,7,8)]
+
+## Reordanar de mas a menos la tabla 
+
+acidos <- acidos[order(acidos[,5],decreasing = FALSE),]
+
+# FALSO es para menos a mayor 
+# TRUE es para mayor a menor 
+
+```
+
+```{r}
+
+# t() transpose 
+
+acidos <- as.data.frame(t(acidos)) # tambien tenemos que especificar que tipo de objeto queremos como resultado 
+
+colnames(acidos) <- acidos [1,] #Renombrar las columnas con los nombres de los acidos
+
+acidos <- acidos[-1,] #borrar fila
+```
+
+## Renombrar nombres de columnas 
+
+```{r}
+metadata$Plant_type[metadata$Plant_type == "No Plant"] <- "Bulk Soil"
+
+### Ejercicio: Renombrar Pi por Fosfato y Phi por Fosfito 
+
+metadata$Treatment[metadata$Treatment == "Pi"] <- "Fosfato"
+
+metadata$Treatment[metadata$Treatment == "Phi"] <- "Fosfito"
+
+
+```
+
+
+## Subset de datos 
+
+A veces es necesario analizar los datos por separado 
+
+```{r}
+
+# Seleccionar ciertas columnas 
+
+medidas_filt <- medidas_clase[,c("ID", "Height.cm", "Sex")]
+
+# Basado en valores de las variables (filas)
+mujeres_altas <- medidas_clase[which(medidas_clase$Sex=="F" & medidas_clase$Height.cm > 165),]
+
+# Ejercicio: Seleccionar hombres cabezones, una circunferencia mayor a 60 cm
+
+hombres_cab <- medidas_clase[which(medidas_clase$CircumferenceHead.com > 60 & medidas_clase$Sex=="M"),]
+
+rm(hombres_cabezones)
+
+
+```
+
+Finalmente otra funcion 
+
+
+```{r}
+
+metadata <- factor(metadata$Treatment, levels = c("Low P", "Fosfato", "Fosfito", "Pi/Phi mix"), ordered = TRUE)
+```
+
+### Ejercicio 
+
+Al dataframe _plantas_ hacer las siguientes modificaciones:
+
+1. Cambiar de orden las columnas para que TOC y MCB sean las primeras variables que se ven despues de los metadatos 
+
+2. Reorganizar la tabla con las plantas con mayor masa foliar hasta arriba _Shoots_
+
+3. En tipo de planta renombrar _No Plant_ por _Bulk Soil_ y tratamiento control a Pi
+
+4. Finalmente crear un nuevo df en el que seleccionen todas las plantas _wild type_ con _root tip count_ menor a 100
+
+5. Manipulacion de datos usando dplyr
+
+```{r}
+
+# 1. 
+
+plantas <- plantas[,c(1,14,15,2,3,4,5,6,7,8,9,10,11,12,13)]
+
+# 2.
+
+plantas <- plantas[order(plantas[,10],decreasing = FALSE),]
+
+#3
+
+plantas$Plant_Type[plantas$Plant_Type == "No Plant"] <- "Bulk Soil"
+
+plantas$Treatment[plantas$Treatment == "Control"] <- "Pi"
+
+#4
+
+Shoots <- plantas[which(plantas$root_tip_count < 100 & plantas$Plant_Type == "Wild Type"),]
+
+#5
+
+
+
+```
+
