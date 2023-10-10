@@ -26,6 +26,9 @@ medidas_clase <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de tr
 metadata <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Exud_metadata.csv")
 
 plantas <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Tabla_plantas.csv")
+
+roedores <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Roedores.csv")
+
 ```
 
 ```{r}
@@ -46,7 +49,7 @@ head(medidas_clase) # Imprime las primeras 6 filas de la tabla
 
 medidas_clase <- medidas_clase[,c(1,9,4,2,3,5,6,7,8)]
 
-## Reordanar de mas a menos la tabla 
+## Reordenar de mas a menos la tabla 
 
 acidos <- acidos[order(acidos[,5],decreasing = FALSE),]
 
@@ -101,7 +104,10 @@ hombres_cab <- medidas_clase[which(medidas_clase$CircumferenceHead.com > 60 & me
 rm(hombres_cabezones)
 
 
+
+
 ```
+
 
 Finalmente otra funcion 
 
@@ -129,7 +135,9 @@ Al dataframe _plantas_ hacer las siguientes modificaciones:
 
 # 1. 
 
-plantas <- plantas[,c(1,14,15,2,3,4,5,6,7,8,9,10,11,12,13)]
+plantas <- plantas[,c(1,15,16,2,3,4,5,6,7,8,9,10,11,12,13,14)]
+
+View(plantas)
 
 # 2.
 
@@ -145,8 +153,214 @@ plantas$Treatment[plantas$Treatment == "Control"] <- "Pi"
 
 Shoots <- plantas[which(plantas$root_tip_count < 100 & plantas$Plant_Type == "Wild Type"),]
 
-#5
 
+```
+
+# Manipulacion de datos usando dplyr
+
+## Subset 
+
+```{r}
+
+# Por filas (filter) y columenas (select)
+
+filter(roedores, year == 1995)
+select(roedores, month, species, genus) # No se necesita signo de pesos en este paquete
+select(roedores, -record_id, - day)
+
+```
+
+```{r}
+
+Roed_mini <- roedores %>% # Funciona como una cadena que une varias funcione juntas
+  filter(weight <= 5) %>% # El resultado de esta  funcion es el input de la siguiente 
+  select(species_id, sex, weight) # Mas facil de leer y no tienes que crear nuevos objetos para caa comando 
+
+  
+```
+
+# Ejercicio con mega ratones 
+
+```{r}
+mega_roedores <- roedores %>%
+  filter(weight > 200) %>% 
+  filter(sex == "M") %>%
+  select(year, species_id, weigth)
+
+
+  
+  
+```
+```{r}
+roedores %>%
+  mutate(weight_kg = weight/1000) # Usando unidades originales sin paquete
+
+## Usando paquete
+
+roedores %>%
+  filter(!is.na(weight)) %>% #Borrar todos los NA
+  select(weight) %>%
+  mutate(weight_kg = ud.convert(weight, "g", "kg")) %>% # cambia entre dos unidades
+  mutate(weight_lb = ud.convert(weight, "g", "lb"))
+```
+
+
+otra funcion muy util es _group by_
+
+```{r}
+
+### Media y desviacion estandar
+
+summ <- roedores %>%
+  group_by(sex, species_id) %>% # Asi se agruparan los datos
+  summarize(mean_weight = mean(weight, na.rm = TRUE), 
+            sd_weight = sd(weight, na.rm = TRUE)) # 
+
+## Remover variables de las cuales no tenga ni peso o sexo 
+
+roedores %>%
+  filter(!is.na(sex), !is.na(species_id)) %>%
+  group_by(sex,species_id) %>%
+  summarize(mean_weight = mean(weight),
+            sd_weight = sd(weight))
+  
+  
+```
+
+```{r}
+
+Contar: count() vs n ()
+
+
+
+```
+
+## Ejercicios para tdyr
+
+```{r}
+# Ejercicio numero uno 
+
+roed <- roedores %>%
+  filter(!is.na(species), !is.na(weight)) %>%
+  group_by(species) %>%
+  summarize(cuartil = quantile(weight, na.rm = TRUE)) 
+
+quantile(roedores$weight, na.rm = TRUE)
+
+# Ejercicio numero dos 
+
+des_est <- plantas %>%
+  filter(!is.na(root_Pi)) %>%
+  group_by(Plant_Type, Treatment) %>% 
+  summarize(media_raiz = mean(root_Pi, na.rm = TRUE), 
+            desv_est = sd(root_Pi, na.rm = TRUE),
+            media_shoot = mean(shoot_Pi, na.rm = TRUE), 
+            desv_est_shoot = sd(shoot_Pi, na.rm = TRUE)) 
+                                         
+```
+
+## Ordenar los datos 
+
+_Select_ y _Arrange_ 
+
+```{r}
+## Cambiar de orden las tablas 
+
+roedores %>%
+  filter(!is.na(sex), !is.na(weight)) %>%
+  select(record_id, species_id, weight:taxa)
+
+  
+## Acomodar filas
+
+roedores %>%
+  filter(!is.na(sex), !is.na(species_id)) %>%
+  group_by(sex,species_id) %>%
+  summarize(mean_weight = mean(weight),
+            sd_weight = sd(weight),
+            n = n()) %>%
+  arrange(mean_weight) # de menor a mayor
+
+  
+```
+## Ejercicio
+
+```{r}
+plantas %>%
+  select(Plant_Type, Treatment, Roots, root_diam_mean:root_Pi) %>%
+  arrange(Roots)
+
+```
+
+## Modificar los dataframes
+
+En dplyr la funcion _pivot_ es parecida a _transpose_. a diferencia de esta ultima, pivot
+
+* wider
+* longer
+
+## pivot_wider(): longer a wider
+
+```{r}
+
+roedores_gw <- roedores %>%
+  filter(!is.na(weight)) %>%
+  group_by(plot_id, genus) %>%
+  summarise(mean_weight = mean(weight)) # aqui agregariamos pivot para hacerlo en un solo codigo 
+
+roedores_wide <- roedores_gw %>% # usando el nuevo codigo 
+  pivot_wider(names_from = genus, # nombres de las columnas
+              values_from = mean_weight) # como separar los valores
+
+View(roedores_wide) # util para PCAs y heatmaps
+
+## Ejercicio: traten de juntar todo este proceso en un solo paso
+
+roedores_gw <- roedores %>%
+  filter(!is.na(weight)) %>%
+  group_by(plot_id, genus) %>%
+  summarise(mean_weight = mean(weight)) %>%
+  pivot_wider(names_from = genus, 
+              values_from = mean_weight)
+
+View(roedores_wide)
+
+
+## Vamos a revertir lo que hicimos 
+
+Roedores_longer <- roedores_wide %>% # tabla anterior 
+  pivot_longer(-plot_id, # quitar plot_id porque no es un genero 
+               names_to = "genus", # sera el nombre de la nueva columna 
+               values_to = "mean_weight") %>% 
+  filter(!is.na(mean_weight)) # esta funcion no quita los NAs automaticamente
+
+  
+```
+
+### Ejercicio 
+
+```{r}
+
+long_patrulla <- roedores %>%
+  filter(!is.na(hindfoot_length)) %>%
+  group_by(plot_type, genus) %>%
+  summarise(promedi_pata = mean(hindfoot_length)) %>%
+  pivot_wider(names_from = genus, 
+              values_from = promedi_pata)
+
+longitud_pata <- long_patrulla %>% # tabla anterior 
+  pivot_longer(-plot_type, # quitar plot_id porque no es un genero 
+               names_to = "genus", # sera el nombre de la nueva columna 
+               values_to = "promedi_pata") %>% 
+  filter(!is.na(promedi_pata))
+
+```
+
+# COMO GUARDARLOS 
+
+```{r}
+
+## Crear un csv 
 
 
 ```
