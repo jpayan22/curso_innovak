@@ -1,0 +1,191 @@
+---
+title: "Estadistica descriptiva y normalizacion de datos"
+output: html_notebook
+---
+
+# Introduccion 
+
+Ahora que ya sabemos como procesar y modificar nuestras tablas, es momento de aplicar todo lo aprendido a una de las bases del metodo cientifico: __el analisis estadistico__ 
+
+Si bien hay muchas maneras de analizar datos y aun mas metodos para ello. A lo largo de este modulo vamos a aprender un flujo basico para determinar que tipo de analisis es el mas idoneo para cada tipo de datos.
+
+```{r}
+# Libraries
+
+library(dplyr) # manipulacion de datos, funciones, modificar columans, filtrar, reordenar, calculos, etc 
+library(tidyr) # modificando las funciones de datos
+library(readr) # leer y escribir csvs
+library(udunits2) # conversion de unidades 
+
+
+# Data
+
+Plantas <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Tabla_plantas.csv")
+
+Stream <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/DATOS/stream.csv")
+
+Acidos <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Acidos_ex.csv")
+
+Fosf <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/DATOS/phosphorus.csv")
+
+medidas_clase <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Class-data.csv")
+
+
+```
+
+# Estadistica descriptiva
+
+En la clase anterior ya vimos, los valores mas importantes dentro de la estadistica descriptiva. El objetivo de la estadística descriptiva es describir los datos observados de forma sintética y significativa para poder analizarlos mejor. La estadística descriptiva comprende tres categorías principales: 
+
+1. Distribución de frecuencias
+    + Count: n(), n_distinct() en dplyr o count()
+    + Range: min(), max(), quantile()
+2. Medidas de tendencia central 
+    + Center: mean(), median()
+3. Medidas de variabilidad.
+    + Spread: sd(), IQR(), mad()
+    
+```{r}
+
+## 1. Distribucion
+
+# Count 
+
+count(medidas_clase, Sex, Handedness)
+
+# Range 
+min(medidas_clase$Height.cm)
+print(min(medidas_clase$Height.cm))
+max(medidas_clase$Height.cm)
+quantile(medidas_clase$Height.cm)
+
+# 2. Tendencia central
+
+mean(medidas_clase$Height.cm) # i tienes celdas vacias no olvides el na.rm = TRUE
+median(medidas_clase$Height.cm)
+
+# 3. Variabilidad 
+sd(medidas_clase$Height.cm)
+IQR(medidas_clase$Height.cm)
+mad(medidas_clase$Height.cm)
+
+```
+## Ejercicio 
+
+Usando el dataframe de _plantas_ sacar la estadistica descriptiva de _Root Area_. 
+
+```{r}
+
+Tendencia central
+  
+mean(Plantas$root_area, na.rm = TRUE) 
+median(Plantas$root_area, na.rm = TRUE)
+sd(Plantas$root_area, na.rm = TRUE)
+mad(Plantas$root_area, na.rm = TRUE)
+
+
+```
+# Normalizacion de datos 
+
+La distribucion normal de datos se caracteriza por gran cantidad de datos alrededor de la media y pocos datos en las colas  de forma __Simetrica__. 
+
+Es decir si conocemos la media y la desviacion estandar son conocidos la probabilidad de que cualquier observacion futura caiga dentro de un rango especifo ya es conocida
+
+Todos los analisis parametricos tiene como primera suposicion que los datos que se van a usar en el analisis siguen una distribucion normal e ahi la importancia de normalizar los datos.
+
+## Como saber si nuestros datos son normales
+
+```{r}
+
+hist(Stream$Temp.degC)
+qqnorm(Stream$Temp.degC)
+
+# Shapiro-wilk 
+shapiro.test(Stream$Temp.degC)
+
+
+```
+## Ejercicio de normalidad 
+
+```{r}
+
+par(mfrow = c(1,2))
+hist(Plantas$root_area)
+qqnorm(Plantas$root_area)
+
+shapiro.test(Plantas$root_area)
+
+
+```
+# EJercicios 
+
+```{r}
+
+rownames(Acidos) <- Acidos[,1]
+Acidos <- Acidos[,-1]
+Acidos <- as.data.frame(t(Acidos))
+         
+for (i in 1:ncol(Acidos)){
+  shapiro <- shapiro.test(Acidos[,i])
+  normal <- ifelse(shapiro[["p.value"]] > 0.05, "YES", "NO")
+  print(c(i, normal))
+}
+         
+for(i in 1:ncol(Acidos)) {
+  hist(Acidos[,i],
+       main = 1)
+}
+
+# Como haria los qqplots
+
+for (i in 1:ncol(Acidos)) {
+  qqnorm(Acidos[,1],
+       main = i)
+}
+ 
+
+
+```
+
+# Ejercicio 
+
+Modifiquen el codigo anterior para checar normalidad em toddas las variables del df _Plantas_
+
+```{r}
+
+for (i in 6:ncol(Plantas)){
+  shapiro <- shapiro.test(Plantas[,i])
+  normal <- ifelse(shapiro[["p.value"]] > 0.05, "YES", "NO")
+  print(c(i, normal))
+}
+
+```
+## AQUI HAY QUE AÑADIR LAS GRAFICAS DE NORMALIDAD CON SESGO A LA IZQUIERDA O DERECHA 
+
+```{r}
+
+# Checar normalidad 
+
+hist(Fosf$TDP)
+qqnorm(Fosf$TDP)
+shapiro.test(Fosf$TDP)
+
+# Transformar usando log 
+
+hist(log(Fosf$TDP))
+qqnorm(log(Fosf$TDP))
+shapiro.test(log(Fosf$TDP))
+
+# Transformar de manera grupal 
+
+Acid_log <- Acidos
+
+for (i in 1:ncol(Acidos)) {
+  Acid_log[,i] <- abs(log(Acidos[,i])) # abs valor absoluto 
+}
+```
+
+
+## Ejercicio final 
+
+
