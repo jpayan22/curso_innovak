@@ -12,6 +12,13 @@ Prueba de hipotesis parametrica para comparar la media de una o dos poblaciones.
 
 fosf <- read.csv ("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/DATOS/phosphorus.csv")
 
+profundidad <- read.csv ("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/DATOS/IBPJ.Thaw.csv")
+
+DOC <- read.csv ("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/DATOS/Pond.Lake.DOC.csv")
+
+calidad_agua <- read.csv ("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/DATOS/WQ.August.csv")
+
+
 ```
 
 # Prueba de T de una muestra
@@ -27,6 +34,157 @@ _Cuando usarla_
 
 t.test(fosf$TDP, mu = 75.6) # Valor de referencia
 
+# Ejercicio: Revisar la normalidad y correr t de student con los datos normalizados
+
+hist(fosf$TDP)
+qqnorm(fosf$TDP)
+shapiro.test(fosf$TDP)
+
+# Transformar usando log 
+
+hist(log(fosf$TDP))
+qqnorm(log(fosf$TDP))
+shapiro.test(log(fosf$TDP))
+
+# T de student transformado
+
+t.test(log(fosf$TDP), mu = log(75.6))
 
 ```
+# Prueba de T pareada 
+
+Es un metodo que se utiliza para comprobar si la media entre pares de medidas es o no igual a cero
+
+_Cuando usarla_
+
+* Para pruebas de antes y despues (tienen que ser variables dependientes entre si 
+
+# Ejemplo: Checar normalidad en la difernecia no en el set de datos 
+
+```{r}
+
+dif <- profundidad$Thaw.2010s - profundidad$Thaw.1970s
+
+shapiro.test(dif)
+
+par(mfrow=c(1,2))
+hist(dif)
+qqnorm(dif)
+
+t.test(profundidad$Thaw.1970s, profundidad$Thaw.2010s,
+       alternative = c("two.sided"),
+       mu=0, paired = TRUE)
+
+
+
+
+```
+## Ejercicio 
+
+Encontrar o crear un mini set de datos que podria ser analizado usando una prueba de t pareada. Realizar el test y concluir si existe o no diferencia estadistica 
+
+# Crear dataframe
+
+```{r}
+
+peso_promedio <- data.frame(paciente=c("1", "2", "3", "4", "5", "6", "7,", "8", "9", "10"),
+peso_inicial = c(67, 65, 56, 87, 92, 48, 76, 39, 64, 49),
+peso_al_mes = c(64, 65, 56, 88, 94, 55, 74, 44, 62, 46))
+
+
+dif_2 <- peso_promedio$peso_inicial - peso_promedio$peso_al_mes
+
+par(mfrow=c(1,2))
+hist(dif_2)
+qqnorm(dif_2)  
+shapiro.test(dif_2)
+
+t.test(peso_promedio$peso_inicial, peso_promedio$peso_al_mes,
+       alternative = c("two.sided"),
+       mu=0, paired = TRUE)}
+
+```
+## Prueba de T para dos muestras 
+
+Esta es la mas comun o la mas conocida, es para probar si las medias de poblaciones desconocidas de dos grupos iguales o no. 
+
+_Cuando usarla_ 
+
+Comparar dos grupos diferentes en relacion con una variable dependiente: Puede arrojar welch (el que no asume varianzas iguales)
+
+* Biomasa de UNA especie de planta en dos regimenes diferentes de crecimiento 
+
+* Concentracion de metales pesados entre dos campos de cultivos 
+
+```{r}
+
+# Estructura: (variable dep ~ variable indep, data = tabla o archivo)
+t.test(DOC ~ Habitat, data = DOC) 
+
+```
+## Ejercicio 
+
+Usando el df _calidad de agua_ comparar las variables; DOC, Fosforo reactivo soluble (SRP), y clorofila en fitoplancton (Phyto) en tanques de alaska entre los anios 1970s and 2010s. 
+
+```{r}
+# SRP 
+
+par(mfrow=c(1,2))
+hist(calidad_agua$SRP)
+qqnorm(calidad_agua$SRP)
+shapiro.test(calidad_agua$SRP)
+
+# Transformar SRP
+
+par(mfrow=c(1,2))
+hist(log(calidad_agua$SRP))
+qqnorm(log(calidad_agua$SRP))
+shapiro.test(log(calidad_agua$SRP))
+
+# T de student para SRP 
+
+t.test(log(SRP) ~ Era, data = calidad_agua)
+
+# DOC1 
+
+par(mfrow=c(1,2))
+hist(calidad_agua$DOC1)
+qqnorm(calidad_agua$DOC1)
+shapiro.test(calidad_agua$DOC1)
+
+# T de student para DOC1 
+
+t.test(DOC1 ~ Era, data = calidad_agua)
+
+# Phyto 
+
+par(mfrow=c(1,2))
+hist(calidad_agua$Phyto)
+qqnorm(calidad_agua$Phyto)
+shapiro.test(calidad_agua$Phyto)
+
+# Transformar Phyto
+
+par(mfrow=c(1,2))
+hist(log(calidad_agua$Phyto))
+qqnorm(log(calidad_agua$Phyto))
+shapiro.test(log(calidad_agua$Phyto))
+
+
+# T de student para Phyto 
+
+t.test(log(Phyto) ~ Era, data = calidad_agua)
+
+# Automatizar diferencias estadisticas de T de student
+
+for (i in 2:ncol(calidad_agua)){
+  dif_est <- t.test(calidad_agua[,i])
+  p_value <- ifelse(dif_est[["p.value"]] < 0.05, "YES", "NO")
+  print(c(i, p_value))
+}
+
+
+```
+
+
 
