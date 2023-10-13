@@ -1,0 +1,98 @@
+---
+title: "Regresiones y Correlaciones"
+output: html_notebook
+---
+
+
+# Introduccion
+
+Para el ultimo tema del curso vamos a ver como calcular regresiones y hacer correlaciones lineales en RStudio. Muchas veces confundidas entre si las regresiones y las correlaciones son las tecnicas mas comunes para determinar si existe una relacion entre dos variables cuantitativas.
+
+```{r}
+# Data 
+
+flujosC <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/flujos.csv")
+
+```
+
+# Correlacion 
+
+# Correlacion
+
+Por un lado, la  correlacion o mas propiamente dicho _el coeficiente de correlacion_ (hay varios metodos el mas comun es el de Pearson) _r_ cuantifica la fuerza con la cual dos variables estan correlacionadas. Al ser un coeficiente _r_ no tiene unidades y sus valores oscilan entre $-1 =< r =< 1$. Valores cercano a 1 o -1 indican una fuerte relacion entre ambas variables y valores cercanas a 0 una relacion debil.
+
+Las suposiciones para correr una correlacion de pearson son el nivel de las medidas que los pares esten relacionados, idealmente que no hayan outliers, y que la correlacion se vea linear
+
+El nivel de las medidas en el caso de pearson se refiere a que ambas variables deben de ser continuas. Si una o ambas variables son ordinales entonces se debe de llevar acavo otro tipo de correlacion como Spearman.
+
+```{r}
+# Revisar suposiciones 
+
+plot(flujosC$CH4.conc,flujosC$CO2.conc)
+
+# Sacar correlacion 
+
+cor.test(flujosC$CH4.conc,flujosC$CO2.conc) # Automaticamene utiliza pearson y si no escribir method = spearman
+
+# Es importante notar que en este caso tambien hay un p-value y para que esta correlacion sea significativa p<0.05. Incluso aunque _r_ sea bajo si p<0.05 esta relacion es significativa
+
+```
+
+# Regresion
+
+Una vez que sabemos si dos variables cuantitativas estan correlacionadas el siguiente paso es expresar esta relacion en la forma de una ecuacion. Usando esta ecuacion uno podria calcular una de las variables si se sabe la otra 
+
+```{r}
+## Regresion lineal de cuando CO2 se mide por minuto
+
+summary(lm(flujosC$CO2.conc ~ flujosC$Minute))
+
+plot(flujosC$Minute, flujosC$CO2.conc)
+abline(lm(flujosC$CO2.conc ~ flujosC$Minute)) # Correr juntos 
+
+
+```
+En este caso el modelo linear da los valores de la interseccion en y la pendiente para nosotros escribir la ecuacion: y= mx + b
+
+  __CO2= -2.10941x+215.72__
+
+En la ecuacion la pendiente nos senala que cada minuto el CO2 disminuye _-2.1 ppm_
+
+Asimismo, esta funcion nos da el valor de __r2= 0.97__ (no confundir con r) que en este caso significa que el 97% de la variacion en CO2 es explicada por el tiempo. Esta ecuacion tambien cuenta con su nivel de significancia y en este caso es menor a p<0.0001
+
+```{r}
+
+# Regresion lineal 
+
+summary(lm(flujosC$CH4.conc ~ flujosC$Minute))
+
+# CH4 = 0.41 minute + 12.29
+```
+## Ejercicio 
+
+Busquen o creen un set de datos en que se puede analizar una correlacion y regresion lineal. JUSTIFIQUE SU RESPUESTA
+
+```{r}
+
+# Tabla 
+
+ufc <- read.csv("~/Libro1.csv")
+
+plot(ufc$Tiempo, ufc$UFC)
+
+# Sacar correlacion 
+
+cor.test(ufc$Tiempo, ufc$UFC)
+
+# Regresion 
+
+summary(lm(flujosC$CO2.conc ~ flujosC$Minute))
+
+plot(ufc$Tiempo, ufc$UFC)
+abline(lm(ufc$Tiempo ~ ufc$UFC)) # Correr juntos 
+
+
+
+
+```
+
