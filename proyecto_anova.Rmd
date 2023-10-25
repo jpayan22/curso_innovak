@@ -1,0 +1,149 @@
+---
+title: "Ensayo Fertirriego"
+author: "Daniel Payan"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+# Fertirriego
+
+### Se le conoce como fertirriego a la combinación de agua y fertilizantes para nutrir los cultivos, y cuyas ventajas son varias, ya que entre otras cosas, reduce los costos de aplicación de fertilizante por hectárea, pues se utiliza el mismo equipo de riego. Además, esta técnica  reduce el daño en los cultivos, al  aplicar de los nutrientes en forma exacta y uniforme.
+
+![EL FERTIRRIEGO: UNA SOLUCIÓN PARA CULTIVOS EXTENSIVOS Y UN ÁREA DE OPORTUNIDAD PARA LA TECNOLOGÍA MEXICANA](Sistema_de_riego.jpg)
+
+### Libraries 
+```{r}
+library(dplyr) 
+library(tidyverse) 
+library(readr)
+library(car)
+library(agricolae)
+library(devtools)
+library(tinytex)
+devtools::install_github('yihui/tinytex')
+```
+
+### Data
+```{r}
+fertirriego <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Proyecto/Fertirriego.csv")
+```
+
+### Análisis de varianza 
+
+#### Debido a la importancia de la fertilización de los cultivos, es vital conocer los parámetros de mayor importancia en su práctica, debido a esto se realizó un experimento en condiciones de invernadero para determinar los factores óptimos de fertirriego.
+#### Los resultados se analizaron mediante un ANOVA de dos vías, en el cual se consideraron como factores; Periodo (_Semanal_ o _Quincenal_); Variedad (_Saladet_ y _Bola_). Adicionalmente se consideraron como variables de respuesta; __Longitud de Tallo (cm)__ y __Longitud de Raíz (cm)__.  
+#### Los pasos para realizar el análisis se detallan a continuación:
+
+### Revisión de supuestos (normalidad y homocedasticidad)
+
+### Prueba de Shapiro-Wilk para comprobacion de normalidad
+
+```{r}
+# Longitud de tallo 
+par(mfrow=c(1,2))
+hist(fertirriego$Long_tallo)
+qqnorm(fertirriego$Long_tallo)  
+shapiro.test(fertirriego$Long_tallo)
+```
+
+#### El resultado de la prueba es: p-value = 0.5339, por lo tanto se rechaza la hipótesis alterna, que premisa que los datos no provienen de una distribución normal.
+
+```{r}
+# Longitud de raíz
+par(mfrow=c(1,2))
+hist(fertirriego$Long_raiz)
+qqnorm(fertirriego$Long_raiz)  
+shapiro.test(fertirriego$Long_raiz)
+```
+
+#### El resultado de la prueba es: p-value = 0.6325, por lo tanto se rechaza la hipótesis alterna, que premisa que los datos no provienen de una distribución normal.
+#### Adicionalmente podemos usar el comando For Loop para seleccionar cuales variables cumplen con el supuesto de normalidad, o en su defecto cuales no la cumplen
+
+```{r}
+for (i in 3:ncol(fertirriego)){
+  shapiro <- shapiro.test(fertirriego[,i])
+  normal <- ifelse(shapiro[["p.value"]] > 0.05, "YES", "NO")
+  print(c(i, normal))
+}
+```
+
+### Transformacion de datos 
+#### (Esto no es necesario, dado que los datos cumplieron los supuestos de normalidad, sin embargo el codigo siguiente es un ejemplo de transformación con el operador de raíz cuadrada (sqrt).
+
+```{r}
+par(mfrow=c(1,2))
+hist(sqrt(fertirriego$Long_tallo))
+qqnorm(sqrt(fertirriego$Long_tallo))  
+shapiro.test(sqrt(fertirriego$Long_tallo))
+```
+
+### Prueba de Levene y Bartlett
+#### Se utilizaron estas pruebas para la comprobacion de homogeneidad de varianzas u homocedasticidad
+
+```{r}
+# Longitud de tallo 
+leveneTest(Long_tallo ~ Variedad, data = fertirriego)
+bartlett.test(Long_tallo ~ Variedad, data = fertirriego)
+```
+
+#### Los resultados de la pruebas Levene y Bartlett para longitud de tallo son: p-value = 0.7292 y 0.8912 respectivamente, por lo cual en ambos casos se decide no rechazar la hipótesis nula, que asume que no existe diferencia significativa entre varianzas.
+
+```{r}
+# Longitud de raíz
+leveneTest(Long_raiz ~ Variedad, data = fertirriego)
+bartlett.test(Long_raiz ~ Variedad, data = fertirriego)
+```
+
+#### Los resultados de la pruebas Levene y Bartlett para longitud de raíz son: p-value = 0.4574 y 0.5539 respectivamente, por lo cual en ambos casos se decide no rechazar la hipótesis nula, que asume que no existe diferencia significativa entre varianzas.
+
+### Datos Balanceados
+#### Se utilizó un piping para determinar si los datos son balanceados (Cada tratamiento cuenta con el mismo número de réplicas)
+
+```{r}
+fertirriego %>%
+  group_by(Variedad) %>%
+  summarise(n())
+```
+
+#### Los datos se encuentran balanceados, puesto que cada tratamiento (Variedad) cuenta con 16 réplicas cada uno.
+
+### ANOVA de efecto interactivo
+#### Se realizó una evaluación del efecto interactivo de la variedad de planta así como el periodo de fertirriego sobre la variable dependiente Longitud de tallo (cm) mediante un ANOVA de dos vías.
+
+```{r}
+anova_fert <- aov(Long_tallo ~ Variedad * Fertirriego, data = fertirriego)
+Anova(anova_fert)
+```
+
+#### Se observa que en los valores de probabilidad del análisis de varianza, existen efectos significativos en la Variedad de planta y el periodo de fertirriego sobre la longitud de tallo, sin embargo NO existe un efecto interactivo entre Variedad:fertirriego (p-value 0.7111)
+
+
+### Prueba de comparación de medias de Tukey 
+```{r}
+tukey_fert <- TukeyHSD(anova_fert)
+plot(tukey_fert)
+```
+
+#### Se observan diferencias estadísticamente significativas entre cada uno de los 6 grupos formados en la comparación de medias. Esto demuestra un efecto significativo sobre la longitud de tallo entre cada tratamiento aplicado.
+
+### Prueba de comparación de medias de Tukey con AGRICOLAE
+#### Se determinaron los grupos homogéneos con el uso del paquete AGRICOLAE
+```{r}
+summary(anova_fert)
+rtout <- HSD.test(anova_fert, trt = c("Variedad", "Fertirriego"),
+                  alpha = 0.05)
+```
+
+#### Esta tabla muestra las medias de longitud de la interacción Variedad:Fertirriego sobre la longitud de tallo de planta, donde la interacción Bola:Semanal obtuvo la media más alta con un total de 16.09 cm, en contraste, la media más baja la obtuvo la interacción Saladet:Quincenal, con una media de 14.58 cm. 
+
+### Conclusión
+#### A partir de los resultados obtenidos se puede concluir que el la variedad de tomate Bola con un sistema de fertirriego semanal, permite obtener un mayor desarrollo de planta, según la longitud de tallo. Cabe resaltar que no existe un efecto marcado entre una variedad y otra, sin embargo la aplicación semanal del fertirriego es más conveniente que la quincenal.
+
+
+### Mas información del sistema de riego en:
+
++ [SIAP](https://www.gob.mx/siap/articulos/el-fertirriego)
++ [Ministerio de Agricultura](https://www.mapa.gob.es/es/ministerio/servicios/informacion/plataforma-de-conocimiento-para-el-medio-rural-y-pesquero/observatorio-de-tecnologias-probadas/material-de-riego/fertirrigacion.aspx)
+
+
