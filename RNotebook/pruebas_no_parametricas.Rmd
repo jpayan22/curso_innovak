@@ -1,0 +1,201 @@
+---
+title: "Análisis no paramétricos"
+output: html_notebook
+---
+
+# Libraries 
+
+```{r}
+
+library(dplyr) 
+library(tidyverse) 
+library(readr)
+library(car)
+library(rstatix)
+library(PMCMR)
+
+```
+# DATA
+
+```{r}
+
+estanques <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/BRW.ponds.csv")
+
+exudados <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Exudados.csv")
+
+comp_suelos <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/Soil_Comparison.csv")
+
+fertirriego <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Proyecto/Fertirriego.csv")
+
+```
+
+# Kruskal-Wallis
+
+Este método se usa como sustituto a _ANOVA_ de una vía ya que no necesita normalidad de distribucion en la poblacion ni homocedasticidad.
+
+```{r}
+
+# Primero revisar normalidad 
+shapiro.test(estanques$DOC)
+hist(estanques$DOC) # Si son normales 
+
+# Homocedasticidad con el Levene test
+leveneTest(DOC ~ Region, data = estanques)
+
+# Kruskal-wallis 
+kruskal.test(DOC ~ Region, data = estanques)
+
+# Comparado con ANOVA
+est_anova <- aov(DOC ~ Region, data = estanques)
+Anova(est_anova)
+
+
+```
+Si lo comparan con el ANOVA el Kruskal-Wallis es mas estricto y por lo tanto a veces puede afectar la significancia estadística 
+
+# Wilkonson Rank 
+
+Es el equivalente no paramétrico de _Tukey HSD_. 
+
+```{r}
+pairwise.wilcox.test(estanques$DOC, estanques$Region, p.adjust.method = "none")
+
+# Comparar con Tukey 
+TukeyHSD(est_anova)
+
+```
+# Por qué es importante el p-value adjust method
+
+Ajuste los p-values cuando existen múltiples comparaciones usando diferentes metodos. Se utilizan para evitar falsos positivos.El mas comun es bonferroni, y el mas estricto. Otro que podemos utilizar es _fdr_ false discovery rate. 
+
+```{r}
+pairwise.wilcox.test(estanques$DOC, estanques$Region, p.adjust.method = "bonferroni")
+
+pairwise.wilcox.test(estanques$DOC, estanques$Region, p.adjust.method = "fdr")
+
+```
+
+```{r}
+
+# Prueba de Dunn 
+
+dunn.test::dunn.test(estanques$DOC, estanques$Region)
+
+```
+# En el set de datos exudados hay tres compuestos como variables. Determina cual de ellos no se puede analizar mientras tests paramétricos y analízalo utilizando Kruskal-wallis para ver si existen diferencias estadisticamente significativas. Utiliza tests post hoc para determinar las diferencias. 
+
+```{r}
+# Normalidad para las tres variables dependientes 
+
+for (i in 3:ncol(exudados)){
+  shapiro <- shapiro.test(exudados[,i])
+  normal <- ifelse(shapiro[["p.value"]] > 0.05, "YES", "NO")
+  print(c(i, normal))
+}
+
+# Tratar de normalizar lo que se pueda 
+
+shapiro.test(sqrt(exudados$Chorismate_C18N)) # Si se pudo 
+shapiro.test(sqrt(exudados$Glyoxalate_HILN)) # no se pudo 
+
+# 3 y 4 SI CUMPLE Y 5 NO.
+
+# Kruska Wallis con glioxalato 
+
+kruskal.test(Glyoxalate_HILN ~ Treatment, data = exudados)
+
+## p-value = 0.2384 No existen diferncias significativas
+
+# Prueba de Wilcoxon con p.adjustment method de bonferroni 
+
+pairwise.wilcox.test(exudados$Glyoxalate_HILN, exudados$Treatment, p.adjust.method = "fdr")
+
+# Prueba de Dunn con glioxalato 
+
+dunn.test::dunn.test(exudados$Glyoxalate_HILN, exudados$Treatment)
+
+```
+# Friedman test 
+
+Como podemos ver en el caso de los exudados Kruskal Wallis no nos permite compara interacciones entre dos variables independientes como en un ANOVA de dos vias. En este caso el equivalente no parametrico al es el test de Friedman. Sin embargo a veces es mejor analizar por separado con Kruskal-Wallis. 
+
+```{r}
+
+data("selfesteem", package = "datarium")
+head(selfesteem, 3)
+
+```
+# Los datos tienen que estar balanceados
+
+```{r}
+
+selfesteem <- selfesteem %>%
+  gather(key = "time", value = "score", t1, t2, t3) %>%
+  convert_as_factor(id, time)
+
+head(selfesteem, 3)
+
+```
+# Ejercicio 
+
+# Normalidad para las tres variables dependientes 
+
+```{r}
+for (i in 3:ncol(fertirriego)){
+  shapiro <- shapiro.test(fertirriego[,i])
+  normal <- ifelse(shapiro[["p.value"]] > 0.05, "YES", "NO")
+  print(c(i, normal))
+}
+
+```
+
+# Tratar de normalizar lo que se pueda 
+
+```{r}
+
+shapiro.test(sqrt(fertirriego$Num_hojas)) # No se pudo 
+
+```
+# Kruska Wallis con Numero de hojas
+
+```{r}
+
+kruskal.test(Num_hojas ~ Fertirriego, data = fertirriego)
+
+```
+
+## p-value = 1.36 E-6 No existen diferncias significativas
+
+# Prueba de Wilcoxon con p.adjustment method de bonferroni 
+
+```{r}
+
+pairwise.wilcox.test(fertirriego$Num_hojas, fertirriego$Fertirriego, p.adjust.method = "bonferroni")
+
+```
+# Prueba de Dunn con numero de hojas
+
+```{r}
+dunn.test::dunn.test(fertirriego$Num_hojas, fertirriego$Fertirriego)
+
+```
+# Balanceo de datos para Fieldman 
+
+```{r}
+
+selfesteem <- selfesteem %>%
+  gather(key = "time", value = "score", t1, t2, t3) %>%
+  convert_as_factor(fertirriego, Variedad)
+
+head(selfesteem, 3)
+
+# Prueba de Friedman 
+
+friedman.test(Num_hojas ~ Fertirriego|Variedad, data = fertirriego)
+
+
+```
+
+
+
+

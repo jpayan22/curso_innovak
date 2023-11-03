@@ -1,0 +1,180 @@
+---
+title: "Graficos con ggplot2"
+output: html_notebook
+---
+# Introducción 
+
+ggplot2 es la base de R para graficas y es muy sencillo
+
+Los elementos de ggplot:
+
+1. Datos: Los datos en vruto que quieres graficar
+
+2. Gometrias geom_: las figuras que van a representar los datos 
+
+3. Estetica aes(): que tan bonitos se van a ver nuestros graficos y sus objetos; color, posicion, tamaño, forma y trasnparencia. 
+
+4. Escala scale_: las dimensiones de tu grafico y donde van a ser "dibujads" tus datos
+
+5. Transformaciones estadisticas stat_: resumenes estadisticos que incluir en el grafico; cuantiles, curvas y sumas.
+
+6. Coordenadas coor_
+
+7. Facetas facet_: el arreglos de los datos en una red de graficos 
+
+8. Temas theme(): va a ser su mejor amigo, en general cambia de una manera rapida varios elementos visuales del grafico.
+
+```{r}
+
+# Libraries
+library(ggplot2)
+library(tidyverse)
+
+# Data 
+data("airquality")
+view(airquality)
+
+FlujosC <- read.csv("~/Capacitaciones/RStudio/curso_innovak/Material de trabajo/flujos.csv")
+
+
+```
+
+# Sintaxis basica de un ggplot
+
+La sintaxis para ggplot es diferente a R base, a este debemos de especificarles 3 cosas:
+
+* Datos: Lo primero que definimos al abrir el comando ggplot()
+* Estetica: dentro de ese comando entra aes(), aqui es odnde vamos a decirle al grafico que es lo que vamos a graficar, las variables. 
+
+```{r}
+
+g <- ggplot(airquality, aes(x = Day, y = Temp))
+
+ggplot(airquality, aes(x = Day, y = Temp)) # No tenemos que guardarlo si solo queremos observarlo
+
+# Sin embargo este grafico esta vacio porque le hacen falta agregar las geometrias
+```
+# Agregando geometrias
+
+```{r}
+
+g + geom_point(color = "red", size = .5)
+g + geom_line()
+g + geom_line() + geom_point
+```
+Como se puede ver con los mismos datos se puede hacer graficos diferentes, la clave esta en saber que bloques utilizar 
+
+## Modificando las propiedades de una geometria 
+
+```{r}
+
+g +
+  geom_point(color = "lightblue", shape = "diamond", size = 2) + 
+  geom_line(color = "firebrick", linetype = "dotted", lwd = .3)
+
+g + geom_line() + geom_point()
+```
+## Temas 
+
+```{r}
+
+theme_set(theme_bw())
+
+g + geom_point(color = "firebrick")
+
+g + geom_point(color = "azure") + 
+  theme_dark()
+
+```
+Como podemos ver hay mas temas que ideas y dentro de un tema hay muchos elementos que se pueden modificar. 
+
+## Ejercicio 
+
+Usando los datos de ejemplo, revisar si la temperatura y radiación solar estas correlacionados de alguna manera. 
+
+```{r}
+# Correlacion entre radiacion solar y temperatura 
+
+cor.test(airquality$Temp,airquality$Solar.R)
+
+# p-value: 0.0007518
+# cor: 0.2758403 
+
+# Graficación 
+
+cor <- ggplot(airquality, aes(x = Solar.R, y = Temp))
+       
+cor + geom_point(color = "red", shape = 1, size = 0.5) + 
+  theme_gray()
+
+# Graficación abline (para poner la linea de tendencia aplicar abline_)
+
+```
+## Cambiando los ejes 
+
+```{r}
+# Asi se cambian los nombres 
+
+ggplot(airquality, aes(x = Day, y = Temp)) + 
+  geom_point(color= "firebrick") + 
+  labs(x = "Day", y = "Temperature(°F)") #Poner unidades
+
+# Agregando superindices
+ggplot(airquality, aes(x = Day, y = Temp)) + 
+  geom_point(color= "firebrick") + 
+  labs(x = "Day",
+       y = expression(paste("Temperature(°F)"
+                            ^"(°C)")))
+
+# Agregando subindices 
+
+ggplot(airquality, aes(x = Day, y = Temp)) + 
+  geom_point(size =, fill = "firebrick") +
+  labs(x = "Day",
+       y = expression(paste("Temperature(°F)"
+                            ^"(°C)")))
+# Cambiando tamaños 
+
+ggplot(airquality, aes(x = Day, y = Temp)) + 
+  geom_point(color = "firebrick") +  
+  labs(x = "Day", y = "Temperature(°F)") + 
+  theme(axis.title.x = element_text(size = 15),
+        axis.title.y = element_text(size = 15))
+
+# Vs. En todo el grafico 
+
+ggplot(airquality, aes(x = Day, y = Temp)) + 
+  geom_point(color = "firebrick") +  
+  labs(x = "Day", y = "Temperature(°F)") + 
+  theme_light(base_size = 8) # 
+
+# ajustando el angulo del texto 
+ggplot(airquality, aes(x = Day, y = Temp)) + 
+  geom_point(color = "firebrick") +  
+  labs(x = "Day", y = "Temperature(°F)") + 
+  theme(axis.text = element_text(color = "blue",
+                                size = 12,
+                                face = "italic"),
+        axis.text.x = element_text(angle = 50,
+                                   vjust = 1,
+                                   hjust = 1,
+                                   size = 12))
+
+# De donde a donde va tu escala 
+ggplot(airquality, aes(x = Day, y = Temp)) + 
+  geom_point(color = "firebrick", size = .5) +  
+  labs(x = "Day", y = "Temperature(°C)") +
+  ylim(c(50,100))
+  
+
+```
+## Flujos 
+
+```{r}
+
+ggplot(FlujosC, aes(x = CH.conc, y = CO2,conc)) + 
+  geom_point(color = "firebrick") +  
+  labs(x = "Day", y = "Temperature(°F)") + 
+  theme_light(base_size = 8) # 
+```
+
